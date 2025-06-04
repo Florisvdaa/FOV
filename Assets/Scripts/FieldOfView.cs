@@ -60,6 +60,13 @@ public class FieldOfView : MonoBehaviour
     /// </summary>
     private void FindVisableTargets()
     {
+        foreach (Transform oldT in visibleTargets)
+        {
+            var oldTarget = oldT.GetComponentInParent<Target>();
+            if (oldTarget != null)
+                oldTarget.NotTargeted();
+        }
+
         visibleTargets.Clear();
 
         Collider[] targetInViewRadius = Physics.OverlapSphere(playerVisualTransform.position, viewRadius, targetMask);
@@ -69,17 +76,21 @@ public class FieldOfView : MonoBehaviour
             Transform target = targetInViewRadius[i].transform;
 
             Vector3 dirToTarget = (target.position - transform.position).normalized;
+            float angleToTarget = Vector3.Angle(playerVisualTransform.forward, dirToTarget);
 
-            if (Vector3.Angle(playerVisualTransform.forward,dirToTarget) < viewAngle / 2)
+            if (angleToTarget < viewAngle / 2)
             {
                 float distToTarget = Vector3.Distance(playerVisualTransform.position, target.position); // Check if there is an obstacle in the FOV
 
                 if (!Physics.Raycast(playerVisualTransform.position, dirToTarget, distToTarget, obstacleMask))
                 {
                     // there are no obstacles in the way, so we can see the target.
-                    // If the target is in View
-                    // Do something to the target
+                    
                     visibleTargets.Add(target);
+
+                    var t = target.GetComponentInParent<Target>();
+                    if (t != null)
+                        t.Targeted();
                 }
             }
         }
@@ -202,19 +213,6 @@ public class FieldOfView : MonoBehaviour
     public List<Transform> GetVisibleTargets() => visibleTargets;
     public float GetFOVRadius() => viewRadius;
     public float GetFOVAngle() => viewAngle;
-    //public List<Transform> GetVisibleTargets()
-    //{
-    //    return visibleTargets;
-    //}
-
-    //public float GetFOVRadius()
-    //{
-    //    return viewRadius;
-    //}
-    //public float GetFOVAngle()
-    //{
-    //    return viewAngle;
-    //}
 
     public struct ViewCastInfo
     {
